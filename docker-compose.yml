@@ -1,44 +1,36 @@
 version: "3.8"
 services:
   samba:
-    # --- NEW IMAGE ---
     image: dperson/samba:latest
     container_name: samba
     
-    # NOTE: Keeping network_mode: "host" as per your last file.
+    # We are using network_mode: "host" as per your last file. 
+    # This bypasses port mapping, but provides direct LAN access.
     network_mode: "host" 
-
+    
+    # --- dperson/samba Environment Variables ---
     environment:
-      # --- System Variables (PUID/PGID/TZ are different names now) ---
-      # dperson uses USERID and GROUPID instead of PUID and PGID
+      # Mapped from .env: Set the UID/GID for permission enforcement
       - USERID=$SAMBA_PUID   
       - GROUPID=$SAMBA_PGID
       - TZ=$TZ
-      
-      # Environment variables for user management are NOT used here.
-      # Users are defined in the 'command' section below.
+      - WORKGROUP=HOMELAB # Optional: Set a specific workgroup name
       
     volumes:
-      # NOTE: dperson/samba does not typically require a /config volume 
-      # for persistence, as all configuration is passed via the command.
-      # If you prefer to keep this for debugging, you can, but it is not necessary.
-      - /home/tinman/docker/samba/config:/config
-
-      # V-1: Map Disk 1 (Shared) - Host path and Container path from .env
+      # V-1: Map Disk 1 (Shared) 
       - $HOST_DISK_1_PATH:$SHARE_1_PATH:rw
 
-      # V-2: Map Disk 2 (Private) - Host path and Container path from .env
+      # V-2: Map Disk 2 (Private) 
       - $HOST_DISK_2_PATH:$SHARE_2_PATH:rw
     
-    # --- CRITICAL: All shares and users are defined in this command block ---
+    # --- CRITICAL: Defines Users and Shares using the documentation syntax ---
+    # The command uses variables from the .env file.
     command: >
       -u "$ADMIN_USER;$ADMIN_PASS" 
       -u "$GUEST_USER;$GUEST_PASS"
-      -s "$SHARE_1_NAME;$SHARE_1_PATH;yes;no;yes;@$SHARE_1_USERS;none;;comment1"
-      -s "$SHARE_2_NAME;$SHARE_2_PATH;yes;no;no;$SHARE_2_USERS;none;;comment2"
-      -p
-      -n
-      -w WORKGROUP
+      -s "$SHARE_1_NAME;$SHARE_1_PATH;yes;no;no;@$SHARE_1_USERS" # Disk 1: R/W for Group (@nas_rw_group)
+      -s "$SHARE_2_NAME;$SHARE_2_PATH;yes;no;no;$SHARE_2_USERS" # Disk 2: R/W for Admin only
+      -p 
 
     cap_add:
       - NET_ADMIN
