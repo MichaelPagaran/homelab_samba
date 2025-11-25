@@ -1,4 +1,4 @@
-## 📄 NAS Server Documentation & Configuration Summary (End-to-End)
+# 📄 NAS Server Documentation & Configuration Summary (End-to-End)
 
 This document details the complete setup of the server, covering LUKS Encryption, System Persistence, Linux Permissions, and the Docker Samba Service.
 
@@ -7,7 +7,6 @@ This document details the complete setup of the server, covering LUKS Encryption
 The initial phase ensured the physical disks were encrypted and configured to unlock automatically during boot (requiring the password only once).
 
 A. Disk Preparation & Encryption
-
     1. Encryption: Used sudo cryptsetup luksFormat /dev/sdX on the two raw disks (/dev/sdb, /dev/sdc).
     2. Unlocking (Mapper Creation): Used sudo cryptsetup luksOpen /dev/sdX <name> to create the decrypted block devices under /dev/mapper/ (e.g., nas_disk1_crypt).
     3. Filesystem: Used sudo mkfs.ext4 /dev/mapper/<name> to format the unlocked devices.
@@ -15,7 +14,6 @@ A. Disk Preparation & Encryption
 B. LUKS Auto-Unlock (Persistence)
 
 To make the drives unlockable at boot, the unique LUKS UUIDs were used:
-
     1. /etc/crypttab: Configured to instruct the system to prompt for the LUKS password(s) early during boot and create the mapper devices.
         - Example Entry: nas_disk1_crypt UUID=<sdb_LUKS_UUID> none luks,discard
     2. /etc/fstab: Configured to automatically mount the decrypted mapper devices once they appear.
