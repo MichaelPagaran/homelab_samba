@@ -22,17 +22,16 @@ To make the drives unlockable at boot, the unique LUKS UUIDs were used:
 4. Initramfs Update: Ran `sudo update-initramfs -u` to ensure the boot environment includes the instructions from `/etc/crypttab`.
 
 ## 2. 👥 User & Permission Structure
-|This            |structure                 |enforces                                              |the |security|policy                 |for                  |both                  |local  |and        |network|access.|FIELD13|FIELD14|FIELD15     |FIELD16|FIELD17|FIELD18   |FIELD19      |
-|----------------|--------------------------|------------------------------------------------------|----|--------|-----------------------|---------------------|----------------------|-------|-----------|-------|-------|-------|-------|------------|-------|-------|----------|-------------|
-|Component,User/Group,Action|Taken,Permission          |Applied,Resulting                                     |Access|Policy  |                       |                     |                      |       |           |       |       |       |       |            |       |       |          |             |
-|Admin           |User,tinman               |(PUID:                                                |$SAMBA_PUID),Primary|account;|added                  |to                   |nas_rw_group.,N/A,Full|control|everywhere.|       |       |       |       |            |       |       |          |             |
-|Guest           |User,guestro,Created      |with                                                  |/usr/sbin/nologin;|added   |to                     |nas_rw_group.,N/A,R/W|access                |to     |Disk       |1      |only   |(via   |group  |membership).|       |       |          |             |
-|Disk            |1                         |(Shared),/srv/nas/disk1,"Owner:                       |tinman,|Group:  |nas_rw_group.",2775,R/W|for                  |tinman                |and    |guestro.   |The    |SetGID |bit    |(2)    |ensures     |files  |created|inherit   |nas_rw_group.|
-|Disk            |2                         |(Private),/srv/nas/disk2,"Owner:                      |tinman,|Group:  |tinman.",700,R/W       |for                  |tinman                |ONLY.  |Denies     |all    |access |to     |the    |group       |and    |others |(including|guestro).    |
+This structure enforces the security policy for both local and network access.This structure enforces the security policy for both local and network access.
 
+|Component       |User/Group                |Action Taken                                          |Permission Applied                                                                     |Resulting Access Policy                                                                   |
+|----------------|--------------------------|------------------------------------------------------|---------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------|
+|Admin User      |tinman (PUID: $SAMBA_PUID)|Primary account; added to nas_rw_group.               |N/A                                                                                    |Full control everywhere.                                                                  |
+|Guest User      |guestro                   |Created with /usr/sbin/nologin; added to nas_rw_group.|N/A                                                                                    |R/W access to Disk 1 only (via group membership).                                         |
+|Disk 1 (Shared) |/srv/nas/disk1            |Owner: tinman, Group: nas_rw_group.                   |2775                                                                                   |R/W for tinman and guestro. The SetGID bit (2) ensures files created inherit nas_rw_group.|
+|Disk 2 (Private)|/srv/nas/disk2            |Owner: tinman, Group: tinman.                         |700                                                                                    |R/W for tinman ONLY. Denies all access to the group and others (including guestro).       |
 
 ## 3. 📦 Docker Samba Service (dperson/samba)
-
 The final service was deployed using Docker Compose V2, leveraging the secure file system established above.
 
 A. Configuration Summary
@@ -45,7 +44,6 @@ A. Configuration Summary
 |command:        |-u, -s, -p arguments      |Configures the Samba server inside the container, defining network users (tinman, guestro) and specifying access control for the two shares based on the users permitted by the host's file permissions.|
 
 B. Access Logic via Samba Shares
-
 |Share Name      |Host Path                 |Samba Access List                                     |Final Access Result                                                                    |
 |----------------|--------------------------|------------------------------------------------------|---------------------------------------------------------------------------------------|
 |shared_files    |/srv/nas/disk1            |tinman,guestro                                        |Both users can read and write (R/W).                                                   |
