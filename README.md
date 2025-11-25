@@ -55,3 +55,39 @@ The service is launched using the V2 syntax, reading the configuration from the 
 ```bash
 docker compose up -d
 ```
+## 5. 🔑 Environment Variables (.env File Content)
+```bash
+# --- System and User IDs (Mapped to dperson/samba USERID/GROUPID) ---
+# These must match the IDs on your Ubuntu host system.
+
+SAMBA_PUID=1000                  # Sample PUID for the 'tinman' user (Run: id -u tinman)
+SAMBA_PGID=1002                  # Sample PGID for the 'nas_rw_group' (Run: id -g nas_rw_group)
+TZ=Asia/Manila                   # Sample Timezone (e.g., America/New_York)
+
+# --- Admin User Credentials ---
+
+ADMIN_USER=tinman                # Your primary administrator username
+ADMIN_PASS=ChangeThisPassword1   # Samba password for tinman
+
+# --- Guest User Credentials ---
+
+GUEST_USER=guestro               # Low-privilege username
+GUEST_PASS=ChangeThisPassword2   # Samba password for guestro
+
+# --- Host File Paths ---
+
+HOST_DISK_1_PATH=/srv/nas/disk1  # Host path for the Shared Disk (LUKS mounted path)
+HOST_DISK_2_PATH=/srv/nas/disk2  # Host path for the Private Disk (LUKS mounted path)
+
+# --- Share 1 (Shared Files) Configuration ---
+
+SHARE_1_NAME=shared_files        # The name of the Samba share visible on the network
+SHARE_1_PATH=/mnt/disk1_shared   # Container path for Disk 1 (Must match volume map in YML)
+SHARE_1_USERS=tinman,guestro     # Users allowed to access this share (comma-separated list)
+
+# --- Share 2 (Private Admin) Configuration ---
+
+SHARE_2_NAME=private_admin       # The name of the Samba share visible on the network
+SHARE_2_PATH=/mnt/disk2_priv     # Container path for Disk 2 (Must match volume map in YML)
+SHARE_2_USERS=tinman             # Users allowed to access this private share (Only tinman)
+```
