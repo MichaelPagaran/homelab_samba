@@ -16,9 +16,9 @@ B. LUKS Auto-Unlock (Persistence)
 
 To make the drives unlockable at boot, the unique LUKS UUIDs were used:
 1. /etc/crypttab: Configured to instruct the system to prompt for the LUKS password(s) early during boot and create the mapper devices. 
-    - Example Entry: nas_disk1_crypt UUID=<sdb_LUKS_UUID> none luks,discard
+    - `Example Entry: nas_disk1_crypt UUID=<sdb_LUKS_UUID> none luks,discard`
 2. /etc/fstab: Configured to automatically mount the decrypted mapper devices once they appear. 
-    - Example Entry: /dev/mapper/nas_disk1_crypt /srv/nas/disk1 ext4 defaults 0 2
+    - `Example Entry: /dev/mapper/nas_disk1_crypt /srv/nas/disk1 ext4 defaults 0 2`
 4. Initramfs Update: Ran sudo update-initramfs -u to ensure the boot environment includes the instructions from /etc/crypttab.
 
 ## 2. 👥 User & Permission Structure
