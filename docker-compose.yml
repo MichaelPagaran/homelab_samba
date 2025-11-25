@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3.3"
 services:
   samba:
     image: dperson/samba:latest
@@ -34,9 +34,3 @@ services:
       - ${HOST_DISK_2_PATH}:${SHARE_2_PATH}:rw
     
     restart: unless-stopped
-
-# --- TOP LEVEL NETWORK DEFINITION ---
-networks:
-  # Reference the network created on the host
-  app_net:
-    external: true
