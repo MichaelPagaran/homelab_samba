@@ -1,36 +1,57 @@
-version: "3.3"
+version: "3.8"
 services:
   samba:
-    image: dperson/samba:latest
+    # --- IMAGE CHANGE HERE ---
+    image: linuxserver/samba:latest  # Docker Hub image
     container_name: samba
     
-    network_mode: "host"
+    # NOTE: network_mode: "host" is still set here.
+    network_mode: "host" 
     
     environment:
       # --- System Variables ---
-      - USERID=${SAMBA_PUID}
-      - GROUPID=${SAMBA_PGID}
-      - TZ=${TZ}
-    
-    # dperson/samba configuration via command line arguments
-    # -p: Set password authentication
-    # -u "username;password": Add user
-    # -s "name;path;browsable;readonly;guest;users": Add share
-    command:
-      - -p
-      - -u
-      - "${ADMIN_USER};${ADMIN_PASS}"
-      - -u
-      - "${GUEST_USER};${GUEST_PASS}"
-      - -s
-      - "${SHARE_1_NAME};${SHARE_1_PATH};yes;no;no;${SHARE_1_USERS}"
-      - -s
-      - "${SHARE_2_NAME};${SHARE_2_PATH};yes;no;no;${SHARE_2_USERS}"
-    
+      - PUID=$SAMBA_PUID   
+      - PGID=$SAMBA_PGID
+      - TZ=$TZ
+      
+      # --- Admin Samba User ---
+      - USER=$ADMIN_USER
+      - PASSWORD=$ADMIN_PASS
+      
+      # --- Guest Samba User ---
+      - USER2=$GUEST_USER
+      - PASS2=$GUEST_PASS
+
+      # --- SHARE DEFINITIONS ---
+
+      # SHARE 1: DISK 1 (Shared_Files)
+      - SHARE_NAME_1=$SHARE_1_NAME
+      - SHARE_PATH_1=$SHARE_1_PATH      
+      - SHARE_USER_1=$SHARE_1_USERS
+      - SHARE_PERMISSIONS_1=yes
+
+      # SHARE 2: DISK 2 (Private_Admin)
+      - SHARE_NAME_2=$SHARE_2_NAME
+      - SHARE_PATH_2=$SHARE_2_PATH
+      - SHARE_USER_2=$SHARE_2_USERS
+      - SHARE_PERMISSIONS_2=yes
+
     volumes:
+      # Persistence for Samba's configuration files
+      - /home/tinman/docker/samba/config:/config
+
       # V-1: Map Disk 1 (Shared) 
-      - ${HOST_DISK_1_PATH}:${SHARE_1_PATH}:rw
+      - $HOST_DISK_1_PATH:$SHARE_1_PATH:rw
+
       # V-2: Map Disk 2 (Private) 
-      - ${HOST_DISK_2_PATH}:${SHARE_2_PATH}:rw
-    
+      - $HOST_DISK_2_PATH:$SHARE_2_PATH:rw
+
+    cap_add:
+      - NET_ADMIN
     restart: unless-stopped
+
+# --- TOP LEVEL NETWORK DEFINITION ---
+networks:
+  # Reference the network created on the host
+  app_net:
+    external: true
