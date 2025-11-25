@@ -1,0 +1,62 @@
+version: "3.8"
+services:
+  samba:
+    image: ghcr.io/linuxserver/samba:latest
+    container_name: samba
+    network_mode: "host"
+    environment:
+      - PUID=1000   # tinman PUID 
+      - PGID=1002   # nas_rw_group PGID
+      - TZ=Asia/Manila    # timezone
+
+      # Admin Samba user
+      - USER=tinman
+      - PASSWORD=011222
+      
+      # Guest Samba user
+      - USER2=guestro
+      - PASS2=guestro123
+
+      # --- SHARE DEFINITIONS ---
+
+      # SHARE 1: DISK 1 (Shared_Files - Contains documents, music, images, videos)
+
+      # Host Path: /srv/nas/disk1
+      - SHARE_NAME_1=shared_files
+      - SHARE_PATH_1=/mnt/disk1_shared      
+
+      # Both tinman and guestro are allowed to access this share
+      - SHARE_USER_1=tinman,guestro
+      - SHARE_PERMISSIONS_1=yes
+
+      # SHARE 2: DISK 2 (Private_Admin - Contains code, and priv)
+
+      # Host Path: /srv/nas/disk2
+      - SHARE_NAME_2=private_admin
+      - SHARE_PATH_2=/mnt/disk2_priv
+      
+      # Only tinman is allowed to access this share
+      - SHARE_USER_2=tinman
+      - SHARE_PERMISSIONS_2=yes
+
+    volumes:
+      # Persistence for Samba's configuration files
+      - /home/tinman/docker/samba/config:/config
+
+      # V-1: Map Disk 1 (Shared) to the container. All sub-folders (documents, music, images, videos, etc.) are included here
+      - /srv/nas/disk1:/mnt/disk1_shared:rw
+
+      # V-2: Map Disk 2 (Private) to the container. All sub-foflders (code, priv) are included here.
+      - /srv/nas/disk2:/mnt/disk2_priv:rw
+
+    cap_add:
+      - NET_ADMIN
+    restart: unless-stopped
+
+# --- TOP LEVEL NETWORK DEFINITION ---
+
+networks:
+  # Reference the network created on the host
+  app_net:
+    external: true
+
