@@ -1,4 +1,3 @@
-version: "3.8"
 services:
   samba:
     image: dperson/samba:latest
@@ -6,6 +5,7 @@ services:
     
     # We are using network_mode: "host" as per your last file. 
     # This bypasses port mapping, but provides direct LAN access.
+    # NOTE: 'app_net' is ignored because of network_mode: host.
     network_mode: "host" 
     
     # --- dperson/samba Environment Variables ---
@@ -14,7 +14,7 @@ services:
       - USERID=$SAMBA_PUID   
       - GROUPID=$SAMBA_PGID
       - TZ=$TZ
-      - WORKGROUP=HOMELAB # Optional: Set a specific workgroup name
+      - WORKGROUP=HOMELAB
       
     volumes:
       # V-1: Map Disk 1 (Shared) 
@@ -22,15 +22,11 @@ services:
 
       # V-2: Map Disk 2 (Private) 
       - $HOST_DISK_2_PATH:$SHARE_2_PATH:rw
-    
+      
     # --- CRITICAL: Defines Users and Shares using the documentation syntax ---
-    # The command uses variables from the .env file.
-    command: >
-      -u "$ADMIN_USER;$ADMIN_PASS" 
-      -u "$GUEST_USER;$GUEST_PASS"
-      -s "$SHARE_1_NAME;$SHARE_1_PATH;yes;no;no;@$SHARE_1_USERS" # Disk 1: R/W for Group (@nas_rw_group)
-      -s "$SHARE_2_NAME;$SHARE_2_PATH;yes;no;no;$SHARE_2_USERS" # Disk 2: R/W for Admin only
-      -p 
+    # Using the Literal Block Scalar (|) and a single line of arguments to prevent parsing errors.
+    command: |
+      -u "$ADMIN_USER;$ADMIN_PASS" -u "$GUEST_USER;$GUEST_PASS" -s "$SHARE_1_NAME;$SHARE_1_PATH;yes;no;no;@$SHARE_1_USERS" -s "$SHARE_2_NAME;$SHARE_2_PATH;yes;no;no;$SHARE_2_USERS" -p
 
     cap_add:
       - NET_ADMIN
