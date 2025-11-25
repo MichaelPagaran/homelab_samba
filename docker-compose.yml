@@ -1,7 +1,7 @@
 version: "3.8"
 services:
   samba:
-    image: linuxserver/samba:latest
+    image: lscr.io/linuxserver/samba:latest
     container_name: samba
     
     # NOTE: network_mode: "host" is still set here.
