@@ -3,60 +3,57 @@ services:
   samba:
     image: ghcr.io/linuxserver/samba:latest
     container_name: samba
-    network_mode: "host"
+    
+    # NOTE: network_mode: "host" is still set here.
+    # If you intend to use the app_net defined at the bottom, 
+    # you must replace 'network_mode: "host"' with 'networks: [app_net]' 
+    # and map the ports explicitly (as discussed in previous steps).
+    network_mode: "host" 
+    
     environment:
-      - PUID=1000   # tinman PUID 
-      - PGID=1002   # nas_rw_group PGID
-      - TZ=Asia/Manila    # timezone
-
-      # Admin Samba user
-      - USER=tinman
-      - PASSWORD=011222
+      # --- System Variables ---
+      - PUID=$SAMBA_PUID   
+      - PGID=$SAMBA_PGID
+      - TZ=$TZ
       
-      # Guest Samba user
-      - USER2=guestro
-      - PASS2=guestro123
+      # --- Admin Samba User ---
+      - USER=$ADMIN_USER
+      - PASSWORD=$ADMIN_PASS
+      
+      # --- Guest Samba User ---
+      - USER2=$GUEST_USER
+      - PASS2=$GUEST_PASS
 
       # --- SHARE DEFINITIONS ---
 
-      # SHARE 1: DISK 1 (Shared_Files - Contains documents, music, images, videos)
-
-      # Host Path: /srv/nas/disk1
-      - SHARE_NAME_1=shared_files
-      - SHARE_PATH_1=/mnt/disk1_shared      
-
-      # Both tinman and guestro are allowed to access this share
-      - SHARE_USER_1=tinman,guestro
+      # SHARE 1: DISK 1 (Shared_Files)
+      - SHARE_NAME_1=$SHARE_1_NAME
+      - SHARE_PATH_1=$SHARE_1_PATH      
+      - SHARE_USER_1=$SHARE_1_USERS
       - SHARE_PERMISSIONS_1=yes
 
-      # SHARE 2: DISK 2 (Private_Admin - Contains code, and priv)
-
-      # Host Path: /srv/nas/disk2
-      - SHARE_NAME_2=private_admin
-      - SHARE_PATH_2=/mnt/disk2_priv
-      
-      # Only tinman is allowed to access this share
-      - SHARE_USER_2=tinman
+      # SHARE 2: DISK 2 (Private_Admin)
+      - SHARE_NAME_2=$SHARE_2_NAME
+      - SHARE_PATH_2=$SHARE_2_PATH
+      - SHARE_USER_2=$SHARE_2_USERS
       - SHARE_PERMISSIONS_2=yes
 
     volumes:
       # Persistence for Samba's configuration files
       - /home/tinman/docker/samba/config:/config
 
-      # V-1: Map Disk 1 (Shared) to the container. All sub-folders (documents, music, images, videos, etc.) are included here
-      - /srv/nas/disk1:/mnt/disk1_shared:rw
+      # V-1: Map Disk 1 (Shared) 
+      - $HOST_DISK_1_PATH:$SHARE_1_PATH:rw
 
-      # V-2: Map Disk 2 (Private) to the container. All sub-foflders (code, priv) are included here.
-      - /srv/nas/disk2:/mnt/disk2_priv:rw
+      # V-2: Map Disk 2 (Private) 
+      - $HOST_DISK_2_PATH:$SHARE_2_PATH:rw
 
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
 
 # --- TOP LEVEL NETWORK DEFINITION ---
-
 networks:
   # Reference the network created on the host
   app_net:
     external: true
-
