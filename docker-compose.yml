@@ -3,31 +3,34 @@ services:
     image: dperson/samba:latest
     container_name: samba
     
-    # --- dperson/samba Environment Variables ---
+    # Using custom network instead of host mode
+    networks:
+      - samba_default
+    
+    # ADD THESE PORT MAPPINGS:
+    ports:
+      - "139:139"
+      - "445:445"
+      - "137:137/udp"
+      - "138:138/udp"
+    
     environment:
-      # Mapped from .env: Set the UID/GID for permission enforcement
       - USERID=$SAMBA_PUID   
       - GROUPID=$SAMBA_PGID
       - TZ=$TZ
       - WORKGROUP=HOMELAB
       
     volumes:
-      # V-1: Map Disk 1 (Shared) 
       - $HOST_DISK_1_PATH:$SHARE_1_PATH:rw
-
-      # V-2: Map Disk 2 (Private) 
       - $HOST_DISK_2_PATH:$SHARE_2_PATH:rw
       
-    # --- CRITICAL: Defines Users and Shares using the documentation syntax ---
-    # Using the Literal Block Scalar (|) and a single line of arguments to prevent parsing errors.
     command: |
       -u "$ADMIN_USER;$ADMIN_PASS" -u "$GUEST_USER;$GUEST_PASS" -s "$SHARE_1_NAME;$SHARE_1_PATH;yes;no;no;@$SHARE_1_USERS" -s "$SHARE_2_NAME;$SHARE_2_PATH;yes;no;no;$SHARE_2_USERS" -p
-
+    
     cap_add:
       - NET_ADMIN
     restart: unless-stopped
 
-# --- TOP LEVEL NETWORK DEFINITION ---
 networks:
-  app_net:
-    external: true
+  samba_default:
+    driver: bridge
