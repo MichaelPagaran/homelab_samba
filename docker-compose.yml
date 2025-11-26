@@ -3,11 +3,6 @@ services:
     image: dperson/samba:latest
     container_name: samba
     
-    # We are using network_mode: "host" as per your last file. 
-    # This bypasses port mapping, but provides direct LAN access.
-    # NOTE: 'app_net' is ignored because of network_mode: host.
-    network_mode: "host" 
-    
     # --- dperson/samba Environment Variables ---
     environment:
       # Mapped from .env: Set the UID/GID for permission enforcement
